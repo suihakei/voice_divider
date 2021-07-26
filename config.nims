@@ -1,0 +1,5 @@
+switch("threads", "on")
+switch("opt", "size")
+switch("d", "ssl")
+switch("app", "gui")
+switch("d", "release")
