@@ -26,7 +26,7 @@ type WAV = object
     fmtFormat: int16                    # ファイルの形式。通常のWaveなら1
     fmtChannel: int16                   # 音声データのチャンネル数（1 or 2）
     fmtSamplesPerSec: int32             # サンプリング周波数
-    fmtBytesPerSec: int32               # 一秒あたりのバイト数 = サンプリング周波数×量子化ビット数 × チャンネル数 / 8
+    fmtBytesPerSec: int32               # 一秒あたりのバイト数 = サンプリング周波数 × 量子化ビット数 × チャンネル数 / 8
     fmtBlockSize: int16                 # 1ブロックのサイズ = 量子化ビット数 / 8 × チャンネル数
     fmtBitsPerSample: int16             # 量子化ビット数
 
@@ -191,7 +191,7 @@ proc divideBySilence*(wav: WAV, threshold: float, silenceTime: float): seq[WAV] 
         sequence.add(i)
         
         # デシベルに変換し、0を最大値とする
-        if getDecibel(i) <= getDecibel(threshold):
+        if getDecibel(i, wav.getQuantizationBits()) <= getDecibel(threshold, wav.getQuantizationBits()):
             silenceCount += 1
         else:
             silenceCount = 0
@@ -236,7 +236,7 @@ proc isAllSilence*(wav: WAV, threshold: float): bool =
     ## threshold float: 無音と識別するためのしきい値（0.0～1.0）
 
     for data in wav.data:
-        if getDecibel(data) >= getDecibel(threshold):
+        if getDecibel(data, wav.getQuantizationBits()) >= getDecibel(threshold, wav.getQuantizationBits()):
             return false
     
     return true
@@ -256,7 +256,7 @@ proc trimSilence*(wav: WAV, threshold: float, silenceTime: float, leaveTopTime: 
     var startFlg = false
 
     for data in wav.data:
-        if startFlg == false and getDecibel(data) >= getDecibel(threshold):
+        if startFlg == false and getDecibel(data, wav.getQuantizationBits()) >= getDecibel(threshold, wav.getQuantizationBits()):
             # 有音になったらフラグを立てる
             startFlg = true
         
@@ -265,7 +265,7 @@ proc trimSilence*(wav: WAV, threshold: float, silenceTime: float, leaveTopTime: 
             tmp.add(data)
 
             # 途中、無音が挟まったらその後最後まで無音の可能性もあるので、有音になってから最終確定用変数にデータを入れる
-            if getDecibel(data) >= getDecibel(threshold):
+            if getDecibel(data, wav.getQuantizationBits()) >= getDecibel(threshold, wav.getQuantizationBits()):
                 for t in tmp:
                     confirmedData.add(t)
                 
@@ -277,8 +277,9 @@ proc trimSilence*(wav: WAV, threshold: float, silenceTime: float, leaveTopTime: 
 
     # データ完成後、先頭に必要分の無音を入れる
     var silentData: seq[float]
-    for i in countUp(0.0, leaveTopTime, 0.1):
-        # 無音をひたすら作る
+    # 無音をひたすら作る
+    let byteOfSilentTime = float(wav.fmtBlockSize) * leaveTopTime
+    for dummy in countUp(0, byteOfSilentTime, 0.1):
         silentData.add(0.0)
 
     # 無音データを先頭に追加
