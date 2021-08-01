@@ -9,7 +9,7 @@ import wNim/[wApp, wFrame, wPanel, wStaticText, wTextCtrl, wButton, wFileDialog,
 ##
 ## バージョン
 ##
-const BUILD_VERSION = "0.20"
+const BUILD_VERSION = "0.30"
 
 
 ##
