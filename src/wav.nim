@@ -134,17 +134,21 @@ proc isWav*(filePath: string): bool =
     # Waveファイル情報を取得
     wav.headerId = fr.readStr(4)
     if wav.headerId != "RIFF":
+        fr.close()
         return false
 
     wav.headerSize = fr.readInt32()
     wav.headerType = fr.readStr(4)
     if wav.headerType != "WAVE":
+        fr.close()
         return false
 
     wav.fmtId = fr.readStr(4)
     if wav.fmtId != "fmt ":
+        fr.close()
         return false
     
+    fr.close()
     return true
 
 
@@ -279,7 +283,7 @@ proc trimSilence*(wav: WAV, threshold: float, silenceTime: float, leaveTopTime: 
     var silentData: seq[float]
     # 無音をひたすら作る
     let byteOfSilentTime = float(wav.fmtBlockSize) * leaveTopTime
-    for dummy in countUp(0, byteOfSilentTime, 0.1):
+    for dummy in countUp(0, byteOfSilentTime*20000, 1):
         silentData.add(0.0)
 
     # 無音データを先頭に追加

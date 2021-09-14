@@ -9,7 +9,7 @@ import wNim/[wApp, wFrame, wPanel, wStaticText, wTextCtrl, wButton, wFileDialog,
 ##
 ## バージョン
 ##
-const BUILD_VERSION = "0.30"
+const BUILD_VERSION = "0.40"
 
 
 ##
@@ -174,7 +174,7 @@ proc divideWav(data: tuple[targetWavFilePath: string, outputDirPath: string, thr
                 slicedWave = wav.trimSilence(slicedWave, data.threshold, data.silenceTimeToCut, data.trimSlienceTime)
 
             # 書き出し
-            wav.writeWave(data.outputDirPath / $outputCnt & ".wav", slicedWave)
+            wav.writeWave(data.outputDirPath / fmt"{outputCnt:04}" & ".wav", slicedWave)
 
             outputCnt += 1
         
